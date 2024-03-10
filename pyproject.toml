@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "instadeep"
+version = "0.1.0"
+description = ""
+authors = ["Cheergui <aminejelloul23@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.26.4"
+pandas = "^2.2.1"
+torch = "^2.2.1"
+pytorch-lightning = "^2.2.1"
+torchmetrics = "^1.3.1"
+torchinfo = "^1.8.0"
+click = "^8.1.7"
+tqdm = "^4.66.2"
+pyment = "^0.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
