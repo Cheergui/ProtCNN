@@ -35,14 +35,19 @@
                         "devices": 1,
                         "precision": "16",
                         "model_save_dirpath":"./experiments",
+                        "logger": {
+                            "save_dir": "./experiments",
+                            "name": "my_experiment"
+                        },
                         "callbacks": {
-                            "dirpath": "./experiments",
                             "save_top_k": 1,
-                            "monitor": "val_loss",
-                            "mode": "min"
+                            "monitor": "val_acc",
+                            "mode": "max"
                         }
                     },
-
+    "evaluation": {
+                        "checkpoint_path": "./experiments/my_experiment/version_0/last.ckpt"
+                    },
     "hyperparameter_tuning": {
                         "batch_size": [32, 64, 128, 256],
                         "conv_channels": [64, 128, 256, 512],

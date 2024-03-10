@@ -5,9 +5,11 @@ import click
 
 from models.protcnn import ProtCNN
 from data.datamodule import DataModule
+from scripts.script_utils import version
 
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, TQDMProgressBar
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import CSVLogger
 from torchinfo import summary
     
 # @click.command()
@@ -31,7 +33,7 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
           num_residual_blocks, residual_blocks_kernel_size, residual_blocks_bias, 
           residual_blocks_dilation, residual_blocks_padding, pool_kernel_size, 
           pool_stride, pool_padding, lr, weight_decay, scheduler_milestones, scheduler_gamma, 
-          accelerator, max_epochs, devices, precision, dirpath, save_top_k, monitor, mode):
+          accelerator, max_epochs, devices, precision, save_dir, name, save_top_k, monitor, mode):
         
         
         
@@ -44,10 +46,14 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
                                 pin_memory=pin_memory)
         
         
-        # Defining the callbacks
-        callbacks = [TQDMProgressBar(refresh_rate=1),
-                     ModelCheckpoint(dirpath=dirpath, save_last=True, save_top_k=save_top_k, filename="model-{epoch:02d}-{val_loss:.2f}", monitor=monitor, mode=mode),
-                     EarlyStopping(monitor=monitor, mode=mode, patience=5, verbose=True)]
+        
+        # Defining the logger and the callbacks
+        logger = CSVLogger(save_dir=save_dir, name=name)
+        
+        checkpoint_path = Path(save_dir) / name
+        checkpoint_path = checkpoint_path / version(checkpoint_path.absolute())
+        print(checkpoint_path)
+        callbacks = ModelCheckpoint(dirpath=checkpoint_path, save_last=True, save_top_k=save_top_k, filename="model-{epoch:02d}-{val_loss:.2f}", monitor=monitor, mode=mode)
         
         # Defining the model
         model = ProtCNN(num_classes=num_classes,
@@ -80,7 +86,8 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
                         max_epochs=max_epochs,
                         devices=devices,
                         precision=precision,
-                        callbacks=callbacks)
+                        callbacks=callbacks,
+                        logger=logger)
         
         
         # Start the training
@@ -91,8 +98,6 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
 if __name__ == "__main__":
 
         curr_path = Path('.')
-        
-        # json_path = curr_path / 'params.json'
         
         json_path = 'params.json'
     
@@ -140,9 +145,13 @@ if __name__ == "__main__":
         devices = trainer_params.devices
         precision = trainer_params.precision
         
+        logger_params = trainer_params.logger
+        
+        save_dir = logger_params.save_dir
+        name = logger_params.name
+        
         callback_params = trainer_params.callbacks
         
-        dirpath = callback_params.dirpath
         save_top_k = callback_params.save_top_k
         monitor = callback_params.monitor
         mode = callback_params.mode
@@ -155,7 +164,7 @@ if __name__ == "__main__":
                 pool_kernel_size=pool_kernel_size, pool_stride=pool_stride, pool_padding=pool_padding, 
                 lr=lr, weight_decay=weight_decay, scheduler_milestones=scheduler_milestones, scheduler_gamma=scheduler_gamma, 
                 accelerator=accelerator, max_epochs=max_epochs, devices=devices, precision=precision, 
-                dirpath=dirpath, save_top_k=save_top_k, monitor=monitor, mode=mode)
+                save_dir=save_dir, name=name, save_top_k=save_top_k, monitor=monitor, mode=mode)
 
         
         print("End of the training.")

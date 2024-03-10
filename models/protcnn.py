@@ -61,9 +61,12 @@ class ProtCNN(LightningModule):
         self.model = torch.nn.Sequential(*layers)
         
         self.train_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
-        self.valid_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
+        self.val_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
+        self.test_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
         
         self.optim_params = {'lr':lr, 'weight_decay':weight_decay, 'scheduler_milestones':scheduler_milestones, 'scheduler_gamma':scheduler_gamma}
+        
+        self.save_hyperparameters()
 
     def forward(self, x):
         return self.model(x.float())
@@ -84,8 +87,17 @@ class ProtCNN(LightningModule):
         x, y = batch['sequence'], batch['target']
         y_hat = self(x)
         pred = torch.argmax(y_hat, dim=1)
-        acc = self.valid_acc(pred, y)
-        self.log('valid_acc', self.valid_acc, on_step=False, on_epoch=True)
+        acc = self.val_acc(pred, y)
+        self.log('val_acc', self.val_acc, on_step=False, on_epoch=True)
+
+        return acc
+    
+    def test_step(self, batch, batch_idx):
+        x, y = batch['sequence'], batch['target']
+        y_hat = self(x)
+        pred = torch.argmax(y_hat, dim=1)
+        acc = self.val_acc(pred, y)
+        self.log('test_acc', self.test_acc, on_step=False, on_epoch=True)
 
         return acc
 
