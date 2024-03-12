@@ -49,4 +49,4 @@ This CLI tool, part of the `train.py` script, is designed for training a Protein
 
 ## Example Usage
 ```bash
-python train.py --data-dir ./data --batch-size 64 --max-epochs 20 --lr 0.001 --save-dir ./model_saves
+python train.py --data-dir .data --batch-size 256 --max-epochs 5 --lr 0.00001 --save-dir experiments

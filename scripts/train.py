@@ -84,7 +84,7 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
         logger = CSVLogger(save_dir=save_dir, name=name)
         
         checkpoint_path = Path(save_dir) / name
-        checkpoint_path = checkpoint_path / version(checkpoint_path.absolute()) / 'checkpoint'
+        checkpoint_path = checkpoint_path / version(checkpoint_path.absolute())
         callbacks = ModelCheckpoint(dirpath=checkpoint_path, save_last=True, save_top_k=save_top_k, filename="model-{epoch:02d}-{val_loss:.2f}", monitor=monitor, mode=mode)
         
         # Defining the model

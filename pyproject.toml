@@ -2,7 +2,7 @@
 name = "instadeep"
 version = "0.1.0"
 description = ""
-authors = ["Cheergui <aminejelloul23@gmail.com>"]
+authors = ["Amine <amine_jelloul@berkeley.edu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

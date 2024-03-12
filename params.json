@@ -23,7 +23,7 @@
                         "pool_kernel_size": 3,
                         "pool_stride": 2,
                         "pool_padding": 1,
-                        "optim": "sgd",
+                        "optim": "adam",
                         "lr": 0.00001,
                         "weight_decay": 0.01,
                         "scheduler_milestones": [5, 8, 10, 12, 14, 16, 18, 20],

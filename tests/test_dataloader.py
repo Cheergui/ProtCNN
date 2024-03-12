@@ -16,7 +16,7 @@ def test_dataset_initialization(load_params):
     dataloader_params = load_params.dataloader
     root = Path(__file__).parent.parent
     data_path = root / dataloader_params.data_dir
-    max_len = dataloader_params.max_lenpyte
+    max_len = dataloader_params.max_len
     dataset = SequenceDataset(max_len=max_len, data_path=data_path, split='train')
     
     assert len(dataset) > 0, "Dataset is empty"
