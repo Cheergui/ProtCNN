@@ -68,7 +68,7 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
           pool_stride, pool_padding, optim, lr, weight_decay, scheduler_milestones, scheduler_gamma, 
           accelerator, max_epochs, devices, precision, save_dir, name, save_top_k, monitor, mode):
 
-
+        seed_everything(0)
         
         # Defining the datamodule
         datamodule = DataModule(data_dir=data_dir,
@@ -77,8 +77,6 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
                                 shuffle=shuffle,
                                 num_workers=num_workers,
                                 pin_memory=pin_memory)
-        
-        
         
         # Defining the logger and the callbacks
         logger = CSVLogger(save_dir=save_dir, name=name)
@@ -108,8 +106,6 @@ def train(data_dir, batch_size, max_len, shuffle, num_workers, pin_memory,
                         scheduler_milestones=scheduler_milestones,
                         scheduler_gamma=scheduler_gamma
                         )
-        
-        seed_everything(0)
         
         # Priting the summary state of the model before stating the training
         summary(model, input_size=(batch_size, in_channels, max_len))

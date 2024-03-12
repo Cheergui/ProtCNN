@@ -38,9 +38,8 @@ def evaluate(checkpoint_path,
 
 if __name__ == "__main__":
     
-    curr_path = Path('.')
-    
-    json_path = 'params.json'
+    root = Path(__file__).parent.parent
+    json_path = root / 'params.json'
 
     with open(json_path, 'r') as file:
             params = json.load(file, object_hook=lambda d: SimpleNamespace(**d))
@@ -52,7 +51,7 @@ if __name__ == "__main__":
     # Getting dataloader parameters
     dataloader_params = params.dataloader
     
-    data_dir = curr_path / dataloader_params.data_dir
+    data_dir = root / dataloader_params.data_dir
     batch_size = dataloader_params.batch_size
     max_len = dataloader_params.max_len
     shuffle = dataloader_params.shuffle

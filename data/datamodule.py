@@ -7,6 +7,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
 from data.dataloader import SequenceDataset
+from data.data_utils import *
 
 class DataModule(LightningDataModule):
     """
@@ -49,6 +50,10 @@ class DataModule(LightningDataModule):
         self.num_workers = num_workers
         self.pin_memory = pin_memory
         
+        data, label = reader('train', self.data_dir)
+        self.word2id = build_vocab(data)
+        self.fam2label = build_labels(label)
+        
     def setup(self, stage):
         """
         Set up the data for the given stage.
@@ -61,10 +66,10 @@ class DataModule(LightningDataModule):
             The stage for which to set up the data. Can be 'fit', 'test', or None. If None, all datasets will be set up.
         """
         if stage == 'fit':
-            self.data_train = SequenceDataset(self.max_len, self.data_dir, 'train')
-            self.data_val = SequenceDataset(self.max_len, self.data_dir, 'dev')
+            self.data_train = SequenceDataset(self.word2id, self.fam2label, self.max_len, self.data_dir, 'train')
+            self.data_val = SequenceDataset(self.word2id, self.fam2label, self.max_len, self.data_dir, 'dev')
         if stage == 'test':
-            self.data_test = SequenceDataset(self.max_len, self.data_dir, 'test')
+            self.data_test = SequenceDataset(self.word2id, self.fam2label, self.max_len, self.data_dir, 'test')
         
     def train_dataloader(self):
         """

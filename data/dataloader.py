@@ -38,12 +38,12 @@ class SequenceDataset(Dataset):
         The maximum length of sequences after preprocessing.
     """
 
-    def __init__(self, max_len, data_path, split):
+    def __init__(self, word2id, fam2label, max_len, data_path, split):
 
         self.data, self.label = reader(split, data_path)
         
-        self.word2id = build_vocab(self.data)
-        self.fam2label = build_labels(self.label)
+        self.word2id = word2id
+        self.fam2label = fam2label
         self.max_len = max_len
 
 
@@ -108,11 +108,13 @@ if __name__ == "__main__":
     dataloader_params = params.dataloader
     
     data_path = root / dataloader_params.data_dir
-    max_len = dataloader_params.max_len
-    
-    split = 'train'
+    max_len = dataloader_params.max_len   
 
-    dataset = SequenceDataset(max_len=max_len, data_path=data_path, split='train')
+    data, label = reader('train', data_path)
+    word2id = build_vocab(data)
+    fam2label = build_labels(label)
+
+    dataset = SequenceDataset(word2id=word2id, fam2label=fam2label, max_len=max_len, data_path=data_path, split='train')
     print(f"Dataset size: {len(dataset)}")
 
     assert len(dataset) > 0, "Dataset is empty"
