@@ -9,6 +9,35 @@ from torch.utils.data import DataLoader
 from data.dataloader import SequenceDataset
 
 class DataModule(LightningDataModule):
+    """
+    A PyTorch Lightning data module for handling sequence data.
+
+    This class extends PyTorch Lightning's LightningDataModule and is specifically designed for sequence data handling. It is responsible for setting up the datasets for different stages (training, validation, testing) and creating the corresponding data loaders.
+
+    Parameters
+    ----------
+    data_dir : str
+        The directory where the data files are located.
+    batch_size : int, optional
+        The size of the batches of data (default is 256).
+    max_len : int, optional
+        The maximum length of the sequences (default is 120).
+    shuffle : bool, optional
+        Whether to shuffle the data at every epoch (default is True).
+    num_workers : int, optional
+        The number of subprocesses to use for data loading (default is 4).
+    pin_memory : bool, optional
+        If True, the data loader will copy Tensors into CUDA pinned memory before returning them (default is True).
+
+    Attributes
+    ----------
+    data_train : SequenceDataset
+        The dataset for training.
+    data_val : SequenceDataset
+        The dataset for validation.
+    data_test : SequenceDataset
+        The dataset for testing.
+    """
     
     def __init__(self, data_dir, batch_size=256, max_len=120, shuffle=True, num_workers=4, pin_memory=True):
         super().__init__()
@@ -21,6 +50,16 @@ class DataModule(LightningDataModule):
         self.pin_memory = pin_memory
         
     def setup(self, stage):
+        """
+        Set up the data for the given stage.
+
+        This method initializes the datasets for training, validation, and testing based on the provided stage. It is responsible for loading and preprocessing the data.
+
+        Parameters
+        ----------
+        stage : str or None
+            The stage for which to set up the data. Can be 'fit', 'test', or None. If None, all datasets will be set up.
+        """
         if stage == 'fit':
             self.data_train = SequenceDataset(self.max_len, self.data_dir, 'train')
             self.data_val = SequenceDataset(self.max_len, self.data_dir, 'dev')
@@ -28,6 +67,14 @@ class DataModule(LightningDataModule):
             self.data_test = SequenceDataset(self.max_len, self.data_dir, 'test')
         
     def train_dataloader(self):
+        """
+        Create a data loader for the training set.
+
+        Returns
+        -------
+        DataLoader
+            The DataLoader for the training dataset.
+        """
         return DataLoader(dataset=self.data_train,
                           batch_size=self.batch_size,
                           shuffle=self.shuffle,
@@ -36,17 +83,31 @@ class DataModule(LightningDataModule):
                           )
         
     def val_dataloader(self):
+        """
+        Create a data loader for the validation set.
+
+        Returns
+        -------
+        DataLoader
+            The DataLoader for the validation dataset.
+        """
         return DataLoader(dataset=self.data_val,
                           batch_size=self.batch_size,
-                          shuffle=self.shuffle,
                           num_workers=self.num_workers,
                           pin_memory=self.pin_memory
                           )
         
     def test_dataloader(self):
+        """
+        Create a data loader for the test set.
+
+        Returns
+        -------
+        DataLoader
+            The DataLoader for the testing dataset.
+        """
         return DataLoader(dataset=self.data_test,
                           batch_size=self.batch_size,
-                          shuffle=self.shuffle,
                           num_workers=self.num_workers,
                           pin_memory=self.pin_memory
                           )
@@ -55,9 +116,8 @@ class DataModule(LightningDataModule):
 if __name__ == "__main__":
     
     # Getting the json data into an object params
-    curr_path = Path('.')
-    
-    json_path = curr_path / 'params.json'
+    root = Path(__file__).parent.parent
+    json_path = root / 'params.json'
     
     with open(json_path, 'r') as file:
         params = json.load(file, object_hook=lambda d: SimpleNamespace(**d))
@@ -65,7 +125,7 @@ if __name__ == "__main__":
     # Getting dataloader parameters
     dataloader_params = params.dataloader
     
-    data_dir = curr_path / dataloader_params.data_dir
+    data_dir = root / dataloader_params.data_dir
     batch_size = dataloader_params.batch_size
     max_len = dataloader_params.max_len
     shuffle = dataloader_params.shuffle
@@ -79,7 +139,7 @@ if __name__ == "__main__":
                             num_workers=num_workers,
                             pin_memory=pin_memory)
     
-    datamodule.setup('train')
+    datamodule.setup('fit')
     datamodule.setup('test')
     
     # Test train dataloader

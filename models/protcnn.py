@@ -10,6 +10,59 @@ from pytorch_lightning import LightningModule
 from torchinfo import summary
 
 class ProtCNN(LightningModule):
+    """
+    A PyTorch Lightning module implementing the ProtCNN model for protein sequence classification.
+
+    ProtCNN is a convolutional neural network designed for the classification of protein sequences. It consists of an initial convolutional layer, followed by a series of residual blocks, a max pooling layer, a flattening operation, and a final linear layer for classification.
+
+    Parameters
+    ----------
+    num_classes : int
+        The number of classes for the classification task.
+    in_channels : int
+        The number of channels in the input data.
+    conv_channels : int
+        The number of output channels of the initial convolutional layer.
+    conv_kernel_size : int
+        The kernel size of the initial convolutional layer.
+    conv_padding : int
+        The padding size of the initial convolutional layer.
+    bias : bool
+        Whether to use bias in the convolutional layers.
+    num_residual_blocks : int
+        The number of residual blocks in the network.
+    residual_blocks_kernel_size : int
+        The kernel size for the convolutional layers in the residual blocks.
+    residual_blocks_bias : bool
+        Whether to use bias in the convolutional layers of the residual blocks.
+    residual_blocks_dilation : int
+        The dilation rate for the convolutional layers in the residual blocks.
+    residual_blocks_padding : int
+        The padding size for the convolutional layers in the residual blocks.
+    pool_kernel_size : int
+        The kernel size of the max pooling layer.
+    pool_stride : int
+        The stride of the max pooling layer.
+    pool_padding : int
+        The padding of the max pooling layer.
+    lr : float
+        The learning rate for the optimizer.
+    weight_decay : float
+        The weight decay (L2 penalty) for the optimizer.
+    scheduler_milestones : list of int
+        The milestones for the learning rate scheduler.
+    scheduler_gamma : float
+        The decay rate for each milestone in the scheduler.
+
+    Attributes
+    ----------
+    model : torch.nn.Sequential
+        The sequential model consisting of the layers defined in the init function.
+    train_acc, val_acc, test_acc : torchmetrics.Accuracy
+        Metrics to calculate accuracy for training, validation, and test datasets.
+    optim_params : dict
+        A dictionary containing parameters for the optimizer.
+    """
 
     def __init__(self, 
                  num_classes=17930,
@@ -26,6 +79,7 @@ class ProtCNN(LightningModule):
                  pool_kernel_size=3,
                  pool_stride=2,
                  pool_padding=1,
+                 optim="adam",
                  lr=1e-5,
                  weight_decay=1e-2,
                  scheduler_milestones=[5, 8, 10, 12, 14, 16, 18, 20],
@@ -64,14 +118,42 @@ class ProtCNN(LightningModule):
         self.val_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
         self.test_acc = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
         
-        self.optim_params = {'lr':lr, 'weight_decay':weight_decay, 'scheduler_milestones':scheduler_milestones, 'scheduler_gamma':scheduler_gamma}
+        self.optim_params = {"optim":optim, 'lr':lr, 'weight_decay':weight_decay, 'scheduler_milestones':scheduler_milestones, 'scheduler_gamma':scheduler_gamma}
         
         self.save_hyperparameters()
 
     def forward(self, x):
+        """
+        Defines the forward pass of the model.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            The input tensor to the model.
+
+        Returns
+        -------
+        torch.Tensor
+            The output tensor from the model after forward pass.
+        """
         return self.model(x.float())
 
     def training_step(self, batch, batch_idx):
+        """
+        Performs a training step using a single batch of data.
+
+        Parameters
+        ----------
+        batch : dict
+            A batch of data. Should contain the 'sequence' and 'target' keys.
+        batch_idx : int
+            The index of the batch.
+
+        Returns
+        -------
+        torch.Tensor
+            The loss value for the batch.
+        """
         x, y = batch['sequence'], batch['target']
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
@@ -84,6 +166,21 @@ class ProtCNN(LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        """
+        Performs a validation step using a single batch of data.
+
+        Parameters
+        ----------
+        batch : dict
+            A batch of data. Should contain the 'sequence' and 'target' keys.
+        batch_idx : int
+            The index of the batch.
+
+        Returns
+        -------
+        torch.Tensor
+            The accuracy for the batch.
+        """
         x, y = batch['sequence'], batch['target']
         y_hat = self(x)
         pred = torch.argmax(y_hat, dim=1)
@@ -93,16 +190,48 @@ class ProtCNN(LightningModule):
         return acc
     
     def test_step(self, batch, batch_idx):
+        """
+        Performs a test step using a single batch of data.
+
+        Parameters
+        ----------
+        batch : dict
+            A batch of data. Should contain the 'sequence' and 'target' keys.
+        batch_idx : int
+            The index of the batch.
+
+        Returns
+        -------
+        torch.Tensor
+            The accuracy for the batch.
+        """
         x, y = batch['sequence'], batch['target']
         y_hat = self(x)
         pred = torch.argmax(y_hat, dim=1)
-        acc = self.val_acc(pred, y)
+        acc = self.test_acc(pred, y)
         self.log('test_acc', self.test_acc, on_step=False, on_epoch=True)
 
         return acc
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.optim_params["lr"], weight_decay=self.optim_params["weight_decay"])
+        """
+        Configures the optimizers and learning rate schedulers.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the optimizer and learning rate scheduler configurations.
+        """
+        optimizer_name = self.optim_params["optim"].lower()
+
+        if optimizer_name == "adam":
+            optimizer = torch.optim.Adam(self.parameters(), 
+                                        lr=self.optim_params["lr"], 
+                                        weight_decay=self.optim_params["weight_decay"])
+        elif optimizer_name == "sgd":
+            optimizer = torch.optim.SGD(self.parameters(), 
+                                        lr=self.optim_params["lr"], 
+                                        weight_decay=self.optim_params["weight_decay"])
         lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.optim_params["scheduler_milestones"], gamma=self.optim_params["scheduler_gamma"])
 
         return {
@@ -137,6 +266,7 @@ if __name__ == "__main__":
     pool_kernel_size = model_params.pool_kernel_size
     pool_stride = model_params.pool_stride
     pool_padding = model_params.pool_padding
+    optim = model_params.optim
     lr = model_params.lr
     weight_decay = model_params.weight_decay
     scheduler_milestones = model_params.scheduler_milestones
@@ -163,6 +293,7 @@ if __name__ == "__main__":
                     pool_kernel_size=pool_kernel_size,
                     pool_stride=pool_stride,
                     pool_padding=pool_padding,
+                    optim=optim,
                     lr=lr,
                     weight_decay=weight_decay,
                     scheduler_milestones=scheduler_milestones,

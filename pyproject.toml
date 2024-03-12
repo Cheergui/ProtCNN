@@ -16,6 +16,8 @@ torchinfo = "^1.8.0"
 click = "^8.1.7"
 tqdm = "^4.66.2"
 pyment = "^0.3.3"
+pytest = "^8.1.1"
+optuna = "^3.5.0"
 
 
 [build-system]

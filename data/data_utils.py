@@ -6,23 +6,23 @@ from tqdm import tqdm
 
 def reader(partition, data_path):
     """
-    Reads and aggregates the csv files located in the specific partition within the data path.
-    
+    Read and concatenate CSV files in a given directory.
+
+    This function iterates over all CSV files in a specified directory (determined by the `partition` and `data_path`), reading each file into a DataFrame. The function then concatenates these DataFrames and returns two Series: sequences and family accessions.
+
     Parameters
     ----------
-    
-    partition (str): The name of the partition directory within the data path folder. Allowable values are 'train', 'test' and 'dev'.
-                     This directory should contain the csv files to be processed.
-    
-    data_path (str): The main path of the data folder that contains the different partition directories.
-    
+    partition : str
+        The specific directory within `data_path` to search for CSV files.
+    data_path : str
+        The path to the main directory containing the data.
+
     Returns
     -------
-    
-    tuple: A tuple containing two pandas Series:
-            - The first Series contains the 'sequence' column aggregated from all files. This is the raw X input.
-            - The second Series contains the 'family_accession' column aggregated from all files. This is the raw Y input.
-    
+    pandas.Series
+        A Series containing sequences from the CSV files.
+    pandas.Series
+        A Series containing family accession numbers from the CSV files.
     """
     data = []
     path = Path(data_path) / partition
@@ -34,19 +34,19 @@ def reader(partition, data_path):
 
 def build_labels(targets):
     """
-    Contructs a dictionary that maps each unique target to unique integer values (id labels).
-    
+    Create a mapping of unique targets to numerical labels.
+
+    This function takes a Series of targets (e.g., family accessions) and maps each unique target to a unique integer. Additionally, an unknown class '<unk>' is mapped to 0.
+
     Parameters
     ----------
-    
-    targets (pandas.Series): A series containing target labels.
-    
+    targets : pandas.Series
+        A Series of target labels (e.g., family accessions).
+
     Returns
     -------
-    
-    fam2label (dic): A dictionary where keys are unique labels from the input 'targets' and values are 
-    corresponding unique integers. Includes the special label '<unk>' mapped to 0.
-    
+    dict
+        A dictionary mapping each unique target to a numerical label.
     """
     unique_targets = targets.unique()
     fam2label = {target: i for i, target in enumerate(unique_targets, start=1)}
@@ -57,19 +57,19 @@ def build_labels(targets):
 
 def build_vocab(data):
     """
-    Builds a dictionary that encodes each amino acids into an unique integer value.
+    Build a vocabulary from a sequence dataset.
+
+    This function creates a vocabulary dictionary where each unique amino acid in the data is assigned a unique integer ID. Special tokens '<pad>' and '<unk>' are also included in the vocabulary, representing padding and unknown characters, respectively.
 
     Parameters
     ----------
-
-    data (pandas.Series): A series containing amino acids sequences.
+    data : pandas.Series
+        A Series containing amino acid sequences.
 
     Returns
     -------
-
-    word2id (dic): A dictionary where keys are unique amino acids from the sequences of the input 'data' and values are 
-    corresponding unique integers. Includes the special labels '<unk>' mapped to 1 and '<pad>' mapped to 0.
-
+    dict
+        A dictionary mapping each unique amino acid (and special tokens) to a unique integer ID.
     """
     voc = set()
     rare_AAs = {'X', 'U', 'B', 'O', 'Z'}
