@@ -18,4 +18,4 @@ This extended CLI tool, derived from the `train.py` script, is enhanced for hype
 
 ## Example Usage
 ```bash
-python hyperparameters.py --data-dir ./data --batch-size [32, 64, 128, 256] --max-epochs 20 --lr [0.0001, 0.001, 0.01]
+python hyperparameters.py --data-dir .data --batch-size [32, 64, 128, 256] --max-epochs 20 --lr [0.0001, 0.001, 0.01]
